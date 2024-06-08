@@ -1,0 +1,97 @@
+
+<!-- Table 'gptchats' edit -->
+<form action="?" method="post" enctype="multipart/form-data" name="frmEdit" class="form-horizontal">
+    [#if OK#]
+    <div class="alert alert-success"><#LANG_DATA_SAVED#></div>
+    [#endif OK#]
+    [#if ERR#]
+    <div class="alert alert-danger"><#LANG_FILLOUT_REQURED#></div>
+    [#endif ERR#]
+    <fieldset>
+        [#if ID=""#]
+        <legend><#LANG_NEW_RECORD#></legend>
+        [#endif ID#]
+        <script lang="text/javascript">
+            function switchPreScript(value) {
+                if (value===1) {
+                    $('#prescript_block').show();
+                } else {
+                    $('#prescript_block').hide();
+                }
+            }
+        </script>
+        <!-- USE_PRESCRIPT (varchar) -->
+        <div class="form-group[#if ERR_USE_PRESCRIPT#] has-error[#endif#]">
+            <label for="use_prescript" class="col-lg-3 control-label">
+                Использовать код подготовки:
+            </label>
+            <div class="col-lg-9">
+                <input type="radio" name="use_prescript" value="1"[#if USE_PRESCRIPT="1"#] checked[#endif#] onclick="switchPreScript(1);"> <#LANG_YES#>
+                <input type="radio" name="use_prescript" value="0"[#if USE_PRESCRIPT!="1"#] checked[#endif#] onclick="switchPreScript(0);"> <#LANG_NO#>
+            </div>
+        </div>
+        <!-- PRESCRIPT (varchar) -->
+        <div class="form-group[#if ERR_PRESCRIPT#] has-error[#endif#]" id="prescript_block"[#if USE_PRESCRIPT!="1"#] style="display:none;"[#endif#]>
+            <label for="prescript" class="col-lg-3 control-label">
+                Код подготовки:
+            </label>
+            <div class="col-lg-9">
+                [#module name="blockly_code" system_name="chatgptprescript<#ID#>" code_field="prescript" action=""#]
+                [#PRESCRIPT_ERRORS#]
+                <textarea name="prescript" id="prescript" class="form-control">[#PRESCRIPT#]</textarea>
+                <div class="help-block">
+                    Для передачи параметров в блок Инструкции и/или Запрос, можно использовать конструкцию вида $out['PARAM_NAME']='VALUE';<br/>
+                    Входящие параметры запуска чата доступны в массиве $params;
+                </div>
+            </div>
+        </div>
+
+        <!-- TEMPERATURE (varchar) -->
+        <div class="form-group[#if ERR_TEMPERATURE#] has-error[#endif#]">
+            <label for="temperature" class="col-lg-3 control-label">
+                Температура (0 - 1):
+            </label>
+            <div class="col-lg-9">
+                <input id="temperature" name="temperature" value="[#TEMPERATURE#]" type="text" class="form-control">
+                <div class="help-block">
+                    Температура влияет на вариативность сгенерированного текста: чем выше значение, тем более непредсказуемым будет результат выполнения запроса.
+                    Укажите любое значение от 0 до 1, чтобы задать «креативность» модели.</div>
+            </div>
+        </div>
+        <!-- INSTRUCTIONS (varchar) -->
+        <div class="form-group[#if ERR_INSTRUCTIONS#] has-error[#endif#]">
+            <label for="instructions" class="col-lg-3 control-label">
+                Инструкции (*):
+            </label>
+            <div class="col-lg-9">
+                <textarea class="form-control" name="instructions">[#INSTRUCTIONS#]</textarea>
+                <div class="help-block">Опишите условия выполнения задания, контекст, возможные ограничения или задайте стиль ответа.<br/>
+                    В инструкции можно использовать переданные параметры в виде %PARAM1%, а так же свойства объектов системы в виде %OBJECT.PROPERTY% .
+                </div>
+            </div>
+        </div>
+        <!-- PROMPT (varchar) -->
+        <div class="form-group[#if ERR_PROMPT#] has-error[#endif#]">
+            <label for="prompt" class="col-lg-3 control-label">
+                Запрос (*):
+            </label>
+            <div class="col-lg-9">
+                <textarea class="form-control" name="prompt">[#PROMPT#]</textarea>
+                <div class="help-block">Сформулируйте свой запрос к модели. Это могут быть ключевые слова, конкретное задание или вопрос.<br/>
+                    В запросе можно использовать переданные параметры в виде %PARAM1%, а так же свойства объектов системы в виде %OBJECT.PROPERTY% .
+                </div>
+            </div>
+        </div>
+        <div class="form-group">
+            <div class="col-lg-offset-3 col-lg-4">
+                <button type="submit" name="subm" value="Submit" class="btn btn-primary"><#LANG_SUBMIT#></button>
+                <a href="?" class="btn btn-default "><#LANG_CANCEL#></a>
+                <input type="hidden" name="id" value="<#ID#>">
+                <input type="hidden" name="view_mode" value="<#VIEW_MODE#>">
+                <input type="hidden" name="edit_mode" value="<#EDIT_MODE#>">
+                <input type="hidden" name="tab" value="<#TAB#>">
+                <input type="hidden" name="mode" value="update">
+            </div>
+        </div>
+    </fieldset>
+</form>

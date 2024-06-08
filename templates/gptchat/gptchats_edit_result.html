@@ -1,0 +1,112 @@
+
+<!-- Table 'gptchats' edit -->
+<form action="?" method="post" enctype="multipart/form-data" name="frmEdit" class="form-horizontal">
+    [#if OK#]
+    <div class="alert alert-success"><#LANG_DATA_SAVED#></div>
+    [#endif OK#]
+    [#if ERR#]
+    <div class="alert alert-danger"><#LANG_FILLOUT_REQURED#></div>
+    [#endif ERR#]
+    <fieldset>
+        <!-- USE_POSTSCRIPT (varchar) -->
+        <script lang="text/javascript">
+            function switchPostScript(value) {
+                if (value===1) {
+                    $('#postscript_block').show();
+                } else {
+                    $('#postscript_block').hide();
+                }
+            }
+            function switchSayResult(value) {
+                if (value===1) {
+                    $('#sayresult_block').show();
+                } else {
+                    $('#sayresult_block').hide();
+                }
+            }
+        </script>
+        <div class="form-group[#if ERR_USE_POSTSCRIPT#] has-error[#endif#]">
+            <label for="use_postscript" class="col-lg-3 control-label">
+                Использовать код обработки:
+            </label>
+            <div class="col-lg-9">
+                <input type="radio" name="use_postscript" value="1"[#if USE_POSTSCRIPT="1"#] checked[#endif#] onclick="switchPostScript(1);"> <#LANG_YES#>
+                <input type="radio" name="use_postscript" value="0"[#if USE_POSTSCRIPT!="1"#] checked[#endif#] onclick="switchPostScript(0);"> <#LANG_NO#>
+            </div>
+        </div>
+        <!-- POSTSCRIPT (varchar) -->
+        <div class="form-group[#if ERR_POSTSCRIPT#] has-error[#endif#]" id="postscript_block"[#if USE_POSTSCRIPT!="1"#] style="display:none;"[#endif#]>
+            <label for="postscript" class="col-lg-3 control-label">
+                Код обработки:
+            </label>
+            <div class="col-lg-9">
+                [#module name="blockly_code" system_name="chatgptpostscript<#ID#>" code_field="postscript" action=""#]
+                [#POSTSCRIPT_ERRORS#]
+                <textarea name="postscript" id="postscript" class="form-control">[#POSTSCRIPT#]</textarea>
+                <div class="help-block">
+                    Ответ искусственного интеллекта доступен в переменной $answer;
+                </div>
+
+            </div>
+        </div>
+        <!-- SAY_RESULT (varchar) -->
+        <div class="form-group[#if ERR_SAY_RESULT#] has-error[#endif#]">
+            <label for="say_result" class="col-lg-3 control-label">
+                Произнести ответ:
+            </label>
+            <div class="col-lg-9">
+                <input type="radio" name="say_result" value="1"[#if SAY_RESULT="1"#] checked[#endif#] onclick="switchSayResult(1);"> <#LANG_YES#>
+                <input type="radio" name="say_result" value="0"[#if SAY_RESULT!="1"#] checked[#endif#] onclick="switchSayResult(0);"> <#LANG_NO#>
+            </div>
+        </div>
+        <div id="sayresult_block"[#if SAY_RESULT!="1"#] style="display:none;"[#endif#]>
+        <!-- SAY_LEVEL (varchar) -->
+        <div class="form-group[#if ERR_SAY_LEVEL#] has-error[#endif#]">
+            <label for="say_level" class="col-lg-3 control-label">
+                <#LANG_MIN_MSG_LEVEL#>:
+            </label>
+            <div class="col-lg-9"><input id="say_level" name="say_level" value="[#SAY_LEVEL#]" type="text" class="form-control"></div>
+        </div>
+        <!-- SAY_TO (varchar) -->
+        <div class="form-group[#if ERR_SAY_TO#] has-error[#endif#]">
+            <label for="say_to" class="col-lg-3 control-label">
+                <#LANG_TERMINAL#>:
+            </label>
+            <div class="col-lg-9">
+                <select name="say_to" class="form-control">
+                    <option value=""><#LANG_USE_DEFAULT#></option>
+                    [#begin TERMINALS#]
+                    <option value="[#NAME#]"[#if NAME="<#SAY_TO#>"#] selected[#endif#]>[#TITLE#]</option>
+                    [#end TERMINALS#]
+                </select>
+            </div>
+        </div>
+
+            <div class="form-group[#if ERR_SAY_TO#] has-error[#endif#]">
+                <label for="say_user_id" class="col-lg-3 control-label">
+                    <#LANG_USER#>:
+                </label>
+                <div class="col-lg-9">
+                    <select name="say_user_id" class="form-control">
+                        <option value=""><#LANG_SECTION_SYSTEM#></option>
+                        [#begin USERS#]
+                        <option value="[#ID#]"[#if ID="<#SAY_USER_ID#>"#] selected[#endif#]>[#NAME#]</option>
+                        [#end USERS#]
+                    </select>
+                </div>
+            </div>
+
+        </div>
+        <div class="form-group">
+            <div class="col-lg-offset-3 col-lg-4">
+                <button type="submit" name="subm" value="Submit" class="btn btn-primary"><#LANG_SUBMIT#></button>
+                <a href="?" class="btn btn-default "><#LANG_CANCEL#></a>
+                <input type="hidden" name="id" value="<#ID#>">
+                <input type="hidden" name="view_mode" value="<#VIEW_MODE#>">
+                <input type="hidden" name="edit_mode" value="<#EDIT_MODE#>">
+                <input type="hidden" name="tab" value="<#TAB#>">
+                <input type="hidden" name="mode" value="update">
+            </div>
+        </div>
+    </fieldset>
+</form>

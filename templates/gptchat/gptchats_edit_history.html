@@ -1,0 +1,33 @@
+[#if HISTORY#]
+<p>
+    <a href="?id=[#ID#]&tab=<#TAB#>&view_mode=<#VIEW_MODE#>&mode=run" class="btn btn-default btn-success">Run now</a>
+    <a href="?id=[#ID#]&tab=<#TAB#>&view_mode=<#VIEW_MODE#>&mode=clear" onclick="return confirm('<#LANG_ARE_YOU_SURE#>');" class="btn btn-default btn-warning"><#LANG_CLEAR_ALL#></a>
+</p>
+ <table class="table">
+     <tr>
+         <th><#LANG_ADDED#></th>
+         <th>Parameters</th>
+         <th>Instructions</th>
+         <th>Prompt</th>
+         <th>Answer</th>
+         <th>&nbsp;</th>
+     </tr>
+     [#begin HISTORY#]
+     <tr>
+         <td>[#ADDED#]</td>
+         <td>[#PARAMS#]</td>
+         <td>[#INSTRUCTIONS#]</td>
+         <td>[#PROMPT#]</td>
+         <td>[#ANSWER#]</td>
+         <td>
+             <a href="?id=<#ID#>&tab=<#TAB#>&view_mode=<#VIEW_MODE#>&mode=delete_history&history_id=[#ID#]" class="btn btn-default btn-xs btn-danger"><i class="glyphicon glyphicon-remove"></i></a>
+         </td>
+     </tr>
+     [#end HISTORY#]
+ </table>
+[#else HISTORY#]
+<p>
+    <a href="?id=[#ID#]&tab=<#TAB#>&view_mode=<#VIEW_MODE#>&mode=run" class="btn btn-default btn-success">Run now</a>
+</p>
+<div class="alert alert-info"><#LANG_NO_RECORDS_FOUND#></div>
+[#endif HISTORY#]
