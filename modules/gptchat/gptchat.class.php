@@ -126,10 +126,16 @@ class gptchat extends module
         $out['YANDEX_CATALOG_ID'] = $this->config['YANDEX_CATALOG_ID'];
         $out['YANDEX_OAUTH'] = $this->config['YANDEX_OAUTH'];
         $out['OPENAI_API_KEY'] = $this->config['OPENAI_API_KEY'];
+        $out['CUSTOM_GPT_URL'] = $this->config['CUSTOM_GPT_URL'];
+        $out['CUSTOM_GPT_MODEL'] = $this->config['CUSTOM_GPT_MODEL'];
+        $out['CUSTOM_GPT_KEY'] = $this->config['CUSTOM_GPT_KEY'];
         if ($this->view_mode == 'update_settings') {
             $this->config['YANDEX_OAUTH'] = gr('yandex_oauth');
             $this->config['YANDEX_CATALOG_ID'] = gr('yandex_catalog_id');
             $this->config['OPENAI_API_KEY'] = gr('openai_api_key');
+            $this->config['CUSTOM_GPT_URL'] = gr('custom_gpt_url');
+            $this->config['CUSTOM_GPT_MODEL'] = gr('custom_gpt_model');
+            $this->config['CUSTOM_GPT_KEY'] = gr('custom_gpt_key');
             $this->saveConfig();
             $this->redirect("?");
         }
@@ -208,7 +214,7 @@ class gptchat extends module
         }
     }
 
-    function activateChat($chat_id, $params = 0)
+    function activateChat($chat_id, $params = 0, $image = '')
     {
         $chat = SQLSelectOne("SELECT * FROM gptchats WHERE ID=" . (int)$chat_id);
         if (!$chat['ID']) return 0;
@@ -240,11 +246,12 @@ class gptchat extends module
         $instructions = processTitle($chat['INSTRUCTIONS']);
         $prompt = processTitle($chat['PROMPT']);
 
-        $answer = '';
-        if (preg_match('/yandex/is', $chat['MODEL'])) {
-            $answer = $this->yandexgpt($chat['MODEL'], $instructions, $prompt, (float)$chat['TEMPERATURE']);
+        if ($chat['MODEL'] == 'customgpt') {
+            $answer = $this->customgpt($instructions, $prompt, (float)$chat['TEMPERATURE'], $image);
+        } elseif (preg_match('/yandex/is', $chat['MODEL'])) {
+            $answer = $this->yandexgpt($chat['MODEL'], $instructions, $prompt, (float)$chat['TEMPERATURE'], $image);
         } else {
-            $answer = $this->openaigpt($chat['MODEL'], $instructions, $prompt, (float)$chat['TEMPERATURE']);
+            $answer = $this->openaigpt($chat['MODEL'], $instructions, $prompt, (float)$chat['TEMPERATURE'], $image);
         }
 
         $res = array();
@@ -271,7 +278,119 @@ class gptchat extends module
 
     }
 
-    function openaigpt($model, $instructions, $prompt, $temperature = 0) {
+    function prepareImage($image_file, $new_width = 1024, $new_height = 1024)
+    {
+        $size = getimagesize($image_file);
+        $content = '';
+        if ($size) {
+            $image_width = $size[0];
+            $image_height = $size[1];
+            $image_format = $size[2];
+
+            if ($image_format == 1) {
+                $old_image = imagecreatefromgif($image_file);
+            } elseif ($image_format == 2) {
+                $old_image = imagecreatefromjpeg($image_file);
+            } elseif ($image_format == 3) {
+                $old_image = imagecreatefrompng($image_file);
+            } else {
+                return '';
+            }
+
+            if ($image_width > $new_width || $image_height > $new_height) {
+                if (($new_width != 0) && ($new_width < $image_width)) {
+                    $image_height = (int)($image_height * ($new_width / $image_width));
+                    $image_width = $new_width;
+                }
+                if (($new_height != 0) && ($new_height < $image_height)) {
+                    $image_width = (int)($image_width * ($new_height / $image_height));
+                    $image_height = $new_height;
+                }
+            }
+            $new_image = imageCreateTrueColor($image_width, $image_height);
+            $white = ImageColorAllocate($new_image, 255, 255, 255);
+            ImageFill($new_image, 0, 0, $white);
+            imagecopyresampled($new_image, $old_image, 0, 0, 0, 0, $image_width, $image_height, imageSX($old_image), imageSY($old_image));
+
+            $cache = ROOT . 'cms/cached/' . md5($image_file) . '.jpg';
+            if (imageJpeg($new_image, $cache)) {
+                $data = LoadFile($cache);
+                $content = 'data:image/jpeg;base64,' . base64_encode($data);
+            }
+        }
+        return $content;
+    }
+
+    function customgpt($instructions, $prompt, $temperature = 0, $image_file = '')
+    {
+        $this->getConfig();
+        if (!$this->config['CUSTOM_GPT_URL']) return false;
+
+        $answer = '';
+
+        $url = $this->config['CUSTOM_GPT_URL'];
+        $model = $this->config['CUSTOM_GPT_MODEL'];
+        $api_key = $this->config['CUSTOM_GPT_KEY'];
+
+        $headers = array(
+            'Content-Type: application/json'
+        );
+
+        if ($api_key) {
+            $headers[] = "Authorization: Bearer " . $api_key;
+        }
+
+        if ($image_file != '' && file_exists($image_file)) {
+            $image_content = $this->prepareImage($image_file);
+            if ($image_content) {
+                $prompt = array(
+                    array('type' => 'text', 'text' => $prompt),
+                    array('type' => 'image_url', 'image_url' => array('url' => $image_content)),
+                );
+            }
+        }
+
+        $request = array(
+            'temperature' => $temperature,
+            'messages' => array(
+                array(
+                    'role' => 'system',
+                    'content' => $instructions
+                ),
+                array(
+                    'role' => 'user',
+                    'content' => $prompt
+                )
+            )
+        );
+
+        if ($model) {
+            $request['model'] = $model;
+        }
+
+        $ch = curl_init($url);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+        curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "POST");
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($request));
+        $result = curl_exec($ch);
+        curl_close($ch);
+
+        if ($result != '') {
+            $data = json_decode($result, true);
+            if (isset($data['choices'][0]['message']['content'])) {
+                $answer = $data['choices'][0]['message']['content'];
+            } else {
+                DebMes('Cannot answer message: ' . $result, 'gptchat');
+            }
+        }
+
+        return $answer;
+
+    }
+
+    function openaigpt($model, $instructions, $prompt, $temperature = 0, $image_file = '')
+    {
         $this->getConfig();
         if (!$this->config['OPENAI_API_KEY']) return false;
 
@@ -283,9 +402,19 @@ class gptchat extends module
             "Authorization: Bearer " . $this->config['OPENAI_API_KEY']
         );
 
+        if ($image_file != '' && file_exists($image_file)) {
+            $image_content = $this->prepareImage($image_file);
+            if ($image_content) {
+                $prompt = array(
+                    array('type' => 'text', 'text' => $prompt),
+                    array('type' => 'image_url', 'image_url' => array('url' => $image_content)),
+                );
+            }
+        }
+
         $request = array(
-          'model'=>$model,
-          'temperature'=>$temperature,
+            'model' => $model,
+            'temperature' => $temperature,
             'messages' => array(
                 array(
                     'role' => 'system',
@@ -319,7 +448,7 @@ class gptchat extends module
 
     }
 
-    function yandexgpt($model, $instructions, $prompt, $temperature = 0)
+    function yandexgpt($model, $instructions, $prompt, $temperature = 0, $image_file = '')
     {
         $this->getConfig();
         if (!$this->config['YANDEX_OAUTH'] || !$this->config['YANDEX_CATALOG_ID']) return false;
@@ -408,7 +537,11 @@ class gptchat extends module
     function api($params)
     {
         if (isset($params['id'])) {
-            $this->activateChat($params['id'], $params);
+            $image = '';
+            if (isset($params['image'])) {
+                $image = $params['image'];
+            }
+            $this->activateChat($params['id'], $params, $image);
         }
     }
 

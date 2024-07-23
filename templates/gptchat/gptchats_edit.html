@@ -40,6 +40,9 @@
    [#begin GPT_MODELS#]
    <option value="[#id#]"[#if id="<#MODEL#>"#] selected[#endif#]>[#title#]</option>
    [#end GPT_MODELS#]
+   [#if CUSTOM_GPT_URL!=""#]
+   <option value="customgpt"[#if MODEL="customgpt"#] selected[#endif#]>Custom API</option>
+   [#endif#]
    [#endif#]
   </select>
   </div>
@@ -53,6 +56,7 @@
   <div class="col-lg-9">
 <pre>/api/module/gptchat?id=[#ID#]
 /api/module/gptchat?id=[#ID#]&amp;param1=value1
+/api/module/gptchat?id=[#ID#]&amp;param1=value1&image=path_to_image
 </pre>
    <a href="/api/module/gptchat?id=[#ID#]" class="btn btn-default btn-xs" target="_blank"><#LANG_OPEN#> <i class="glyphicon glyphicon-new-window"></i></a>
   </div>
@@ -64,6 +68,7 @@
   <div class="col-lg-9">
 <pre>callAPI('/api/module/gptchat',array('id'=>[#ID#])); // простая активация
 callAPI('/api/module/gptchat',array('id'=>[#ID#],'param1'=>'value1')); // активация с передачей параметров
+callAPI('/api/module/gptchat',array('id'=>[#ID#],'param1'=>'value1', 'image'=>'path_to_image')); // активация с передачей изображения
 </pre>
   </div>
  </div>

@@ -10,11 +10,16 @@ $rec = SQLSelectOne("SELECT * FROM $table_name WHERE ID='" . (int)$id . "'");
 
 if ($this->tab == 'history' && $rec['ID']) {
     if ($this->mode == 'run') {
-        $this->activateChat($rec['ID']);
+        global $file;
+        if ($file != '' && file_exists($file)) {
+            $this->activateChat($rec['ID'], 0, $file);
+        } else {
+            $this->activateChat($rec['ID']);
+        }
         $this->redirect("?id=" . $rec['ID'] . "&view_mode=" . $this->view_mode . "&tab=" . $this->tab);
     }
     if ($this->mode == 'delete_history' && gr('history_id')) {
-        SQLExec("DELETE FROM gptchats_history WHERE CHAT_ID=" . $rec['ID']." AND ID=".gr('history_id','int'));
+        SQLExec("DELETE FROM gptchats_history WHERE CHAT_ID=" . $rec['ID'] . " AND ID=" . gr('history_id', 'int'));
         $this->redirect("?id=" . $rec['ID'] . "&view_mode=" . $this->view_mode . "&tab=" . $this->tab);
     }
     if ($this->mode == 'clear') {
@@ -121,13 +126,18 @@ if ($this->mode == 'update') {
 if ($this->config['YANDEX_CATALOG_ID'] != '' && $this->config['YANDEX_OAUTH']) {
     $out['CAN_YANDEX'] = 1;
 }
+
+if ($this->config['CUSTOM_GPT_URL'] != '') {
+    $out['CUSTOM_GPT_URL'] = $this->config['CUSTOM_GPT_URL'];
+}
+
 if ($this->config['OPENAI_API_KEY']) {
     $out['CAN_OPENAI'] = 1;
     if ($this->tab == '') {
         $gpt_models = array();
 
         $cache_filename = ROOT . 'cms/cached/openai_models.txt';
-        if (file_exists($cache_filename) && (time()-filemtime($cache_filename))<24*60*60) {
+        if (file_exists($cache_filename) && (time() - filemtime($cache_filename)) < 24 * 60 * 60) {
             $result = LoadFile($cache_filename);
         } else {
             $url = 'https://api.openai.com/v1/models';
@@ -140,7 +150,7 @@ if ($this->config['OPENAI_API_KEY']) {
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
             $result = curl_exec($ch);
             curl_close($ch);
-            if ($result!='') {
+            if ($result != '') {
                 SaveFile($cache_filename, $result);
             }
         }
@@ -150,9 +160,9 @@ if ($this->config['OPENAI_API_KEY']) {
             $data = json_decode($result, true);
             if (isset($data['data'])) {
                 $models = $data['data'];
-                foreach($models as $model) {
-                    if (preg_match('/^gpt/',$model['id'])) {
-                        $gpt_models[]=array('id'=>$model['id'],'title'=>'OpenAI '.$model['id']);
+                foreach ($models as $model) {
+                    if (preg_match('/^gpt/', $model['id'])) {
+                        $gpt_models[] = array('id' => $model['id'], 'title' => 'OpenAI ' . $model['id']);
                     }
                 }
             }
