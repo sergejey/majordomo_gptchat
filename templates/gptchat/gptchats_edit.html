@@ -66,9 +66,10 @@
    PHP:
   </label>
   <div class="col-lg-9">
-<pre>callAPI('/api/module/gptchat',array('id'=>[#ID#])); // простая активация
-callAPI('/api/module/gptchat',array('id'=>[#ID#],'param1'=>'value1')); // активация с передачей параметров
-callAPI('/api/module/gptchat',array('id'=>[#ID#],'param1'=>'value1', 'image'=>'path_to_image')); // активация с передачей изображения
+<pre>callAPI('/api/module/gptchat', 'GET', array('id'=>[#ID#])); // простая активация
+callAPI('/api/module/gptchat', 'GET',array('id'=>[#ID#],'param1'=>'value1')); // активация с передачей параметров
+callAPI('/api/module/gptchat', 'GET',array('id'=>[#ID#],'param1'=>'value1', 'image'=>'path_to_image')); // активация с передачей изображения
+$answer = callAPISync('/api/module/gptchat', 'GET', array('id'=>[#ID#])); // простая активация с ожиданием ответа
 </pre>
   </div>
  </div>
