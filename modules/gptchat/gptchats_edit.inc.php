@@ -117,6 +117,11 @@ if ($this->mode == 'update') {
             $new_rec = 1;
             $rec['ID'] = SQLInsert($table_name, $rec); // adding new record
         }
+
+        if ($rec['LINKED_OBJECT'] != '' && $rec['LINKED_PROPERTY'] != '') {
+            addLinkedProperty($rec['LINKED_OBJECT'], $rec['LINKED_PROPERTY'], $this->name);
+        }
+
         $out['OK'] = 1;
     } else {
         $out['ERR'] = 1;

@@ -209,7 +209,12 @@ class gptchat extends module
         $total = count($properties);
         if ($total) {
             for ($i = 0; $i < $total; $i++) {
-                $this->activateChat($property[$i]['ID'], array('VALUE' => $value));
+                $image = '';
+                if (is_integer(strpos($value, '/')) && file_exists(ROOT . 'cms/images/' . $value)) {
+                    $image = ROOT . 'cms/images/' . $value;
+                }
+                $this->activateChat($properties[$i]['ID'], array('VALUE' => $value), $image);
+
             }
         }
     }
