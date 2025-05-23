@@ -136,10 +136,10 @@ if ($this->config['CUSTOM_GPT_URL'] != '') {
     $out['CUSTOM_GPT_URL'] = $this->config['CUSTOM_GPT_URL'];
 }
 
+$gpt_models = array();
 if ($this->config['OPENAI_API_KEY']) {
     $out['CAN_OPENAI'] = 1;
     if ($this->tab == '') {
-        $gpt_models = array();
 
         $cache_filename = ROOT . 'cms/cached/openai_models.txt';
         if (file_exists($cache_filename) && (time() - filemtime($cache_filename)) < 24 * 60 * 60) {
@@ -171,10 +171,11 @@ if ($this->config['OPENAI_API_KEY']) {
                     }
                 }
             }
-            $out['GPT_MODELS'] = $gpt_models;
         }
     }
 }
+
+$out['GPT_MODELS'] = $gpt_models;
 
 if ($this->tab == 'result') {
     $out['TERMINALS'] = getTerminalsByCANTTS();

@@ -28,8 +28,9 @@
  <div class="col-lg-9">
   <select name="model" id="model" class="form-control">
    <option value=""></option>
-   [#if CAN_OPENAI="1"#]
-   [#endif CAN_OPENAI#]
+   [#if CUSTOM_GPT_URL!=""#]
+   <option value="customgpt"[#if MODEL="customgpt"#] selected[#endif#]>Custom API</option>
+   [#endif#]
    [#if CAN_YANDEX="1"#]
    <option value="yandexgpt"[#if MODEL="yandexgpt"#] selected[#endif#]>YandexGPT Pro</option>
    <option value="yandexgpt-lite"[#if MODEL="yandexgpt-lite"#] selected[#endif#]>YandexGPT Lite</option>
@@ -40,10 +41,7 @@
    [#begin GPT_MODELS#]
    <option value="[#id#]"[#if id="<#MODEL#>"#] selected[#endif#]>[#title#]</option>
    [#end GPT_MODELS#]
-   [#if CUSTOM_GPT_URL!=""#]
-   <option value="customgpt"[#if MODEL="customgpt"#] selected[#endif#]>Custom API</option>
-   [#endif#]
-   [#endif#]
+   [#endif GPT_MODELS#]
   </select>
   </div>
 </div>
