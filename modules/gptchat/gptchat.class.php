@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 /**
  * GPT chat
  * @package project
@@ -1016,6 +1016,23 @@ class gptchat extends module
             if (isset($params['image'])) {
                 $image = $params['image'];
             }
+    function auditCode($code, $language = 'php')
+    {
+        $chatId = 0;
+        if (defined('SETTINGS_CODEEDITOR_GPTCHAT_ID')) {
+            $chatId = (int)SETTINGS_CODEEDITOR_GPTCHAT_ID;
+        }
+        if (!$chatId) {
+            $chat = SQLSelectOne("SELECT ID FROM gptchats WHERE TITLE LIKE '%audit%' OR TITLE LIKE '%аудит%' ORDER BY ID LIMIT 1");
+            $chatId = $chat['ID'] ? (int)$chat['ID'] : 0;
+        }
+        if (!$chatId) {
+            return '';
+        }
+        $this->activateChat($chatId, array('code' => $code, 'language' => $language, 'task' => 'Code review'));
+        $history = SQLSelectOne("SELECT ANSWER FROM gptchats_history WHERE CHAT_ID=" . $chatId . " ORDER BY ID DESC LIMIT 1");
+        return $history['ANSWER'] ?: '';
+    }
             $this->activateChat($params['id'], $params, $image);
         }
     }
