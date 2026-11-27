@@ -1016,6 +1016,10 @@ class gptchat extends module
             if (isset($params['image'])) {
                 $image = $params['image'];
             }
+            $this->activateChat($params['id'], $params, $image);
+        }
+    }
+
     function auditCode($code, $language = 'php')
     {
         $chatId = 0;
@@ -1032,9 +1036,6 @@ class gptchat extends module
         $this->activateChat($chatId, array('code' => $code, 'language' => $language, 'task' => 'Code review'));
         $history = SQLSelectOne("SELECT ANSWER FROM gptchats_history WHERE CHAT_ID=" . $chatId . " ORDER BY ID DESC LIMIT 1");
         return $history['ANSWER'] ?: '';
-    }
-            $this->activateChat($params['id'], $params, $image);
-        }
     }
 
     /**
